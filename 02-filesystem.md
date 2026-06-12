@@ -19,6 +19,7 @@
 This is the most important thing to understand about Linux:
 
 > **Everything is a file.** Your documents, yes. But also your programs, your settings, your USB drive, your keyboard, your network card — all of them appear somewhere in the filesystem as files.
+> Technically, not everything is a regular file, but Linux exposes many system resources through file-like interfaces.
 
 This sounds weird at first. But it's what makes Linux so powerful and composable. If you can read a file, you can read from hardware. If you can write to a file, you can configure the system.
 
@@ -34,7 +35,7 @@ Everything branches from there:
 /
 ├── etc/          ← system configuration files
 ├── home/         ← user home directories
-│   ├── alice/
+│   ├── shadows/
 │   └── bob/
 ├── var/
 │   └── log/      ← system logs
@@ -42,7 +43,7 @@ Everything branches from there:
 │   ├── bin/      ← user programs (ls, grep, python3...)
 │   └── lib/      ← shared libraries
 ├── bin/          ← essential system programs
-├── tmp/          ← temporary files (wiped on reboot)
+├── tmp/          ← temporary files
 ├── dev/          ← device files (your hardware)
 ├── proc/         ← virtual filesystem, live kernel info
 └── root/         ← home directory of the root user
@@ -52,18 +53,18 @@ Everything branches from there:
 
 ## Key directories you need to know
 
-| Path        | What lives there                                                  |
-| ----------- | ----------------------------------------------------------------- |
-| `/`         | Root — the top of everything                                      |
-| `/home`     | Your stuff. Alice's files live in `/home/alice`                   |
-| `/etc`      | System config files. nginx config, fstab, hostname — all in here  |
-| `/bin`      | Essential commands — `ls`, `cp`, `mv`                             |
-| `/usr/bin`  | Most user-installed programs                                      |
-| `/var/log`  | Log files. When something breaks, look here first                 |
-| `/tmp`      | Temporary files. Cleared on every reboot                          |
-| `/dev`      | Hardware as files — `/dev/sda` is your first hard drive           |
-| `/proc`     | Live kernel data — `/proc/cpuinfo` shows your CPU in real time    |
-| `/root`     | The root user's home directory (not the same as `/`)              |
+| Path       | What lives there                                                 |
+| ---------- | ---------------------------------------------------------------- |
+| `/`        | Root — the top of everything                                     |
+| `/home`    | Your stuff. shadows's files live in `/home/shadows`                  |
+| `/etc`     | System config files. nginx config, fstab, hostname — all in here |
+| `/bin`     | common command-line programs                                     |
+| `/usr/bin` | most command-line programs                                       |
+| `/var/log` | Log files. When something breaks, look here first                |
+| `/tmp`     | Temporary files. Often cleared automatically                     |
+| `/dev`     | Hardware as files — `/dev/sda` is your first hard drive          |
+| `/proc`    | Live kernel data — `/proc/cpuinfo` shows your CPU in real time   |
+| `/root`    | The root user's home directory (not the same as `/`)             |
 
 > **Common mistake:** `/root` and `/` are different things. `/` is the top of the entire tree. `/root` is just a home folder for the superuser.
 
@@ -78,7 +79,7 @@ pwd
 ```
 
 ```
-/home/alice
+/home/shadows
 ```
 
 `pwd` stands for **Print Working Directory**. It tells you exactly where you are in the tree right now.
@@ -105,17 +106,21 @@ Example output of `ls -la`:
 
 ```
 total 48
-drwxr-xr-x  6 alice alice 4096 Jun  1 09:12 .
+drwxr-xr-x  6 shadows shadows 4096 Jun  1 09:12 .
 drwxr-xr-x  4 root  root  4096 May 30 18:00 ..
--rw-r--r--  1 alice alice  220 May 30 18:00 .bash_logout
--rw-r--r--  1 alice alice 3526 May 30 18:00 .bashrc
-drwxr-xr-x  2 alice alice 4096 Jun  1 08:00 Documents
-drwxr-xr-x  2 alice alice 4096 Jun  1 08:00 Downloads
+-rw-r--r--  1 shadows shadows  220 May 30 18:00 .bash_logout
+-rw-r--r--  1 shadows shadows 3526 May 30 18:00 .bashrc
+drwxr-xr-x  2 shadows shadows 4096 Jun  1 08:00 Documents
+drwxr-xr-x  2 shadows shadows 4096 Jun  1 08:00 Downloads
 ```
+
+Don't worry about all of that yet — permissions get their own full lesson.
 
 The columns read: `permissions · links · owner · group · size · date · name`
 
-Don't worry about all of that yet — permissions get their own full lesson.
+> [!Note] 
+> Files beginning with a dot (`.`) are hidden by default.
+
 
 ---
 
@@ -137,7 +142,7 @@ cd ..
 cd -
 
 # Go to an absolute path
-cd /etc/nginx
+cd /etc
 ```
 
 ---
@@ -149,7 +154,7 @@ This is a concept that trips up a lot of beginners. Once it clicks, navigation b
 **Absolute path** — starts from root `/`. Always works, regardless of where you are.
 
 ```bash
-cd /home/alice/Documents
+cd /home/shadows/Documents
 ls /var/log
 cat /etc/hostname
 ```
@@ -157,16 +162,16 @@ cat /etc/hostname
 **Relative path** — starts from where you currently are.
 
 ```bash
-# If you're in /home/alice, these two are the same:
+# If you're in /home/shadows, these two are the same:
 cd Documents
-cd /home/alice/Documents
+cd /home/shadows/Documents
 ```
 
 ### Special path shortcuts
 
 | Shortcut | Means                                |
 | -------- | ------------------------------------ |
-| `~`      | Your home directory (`/home/alice`)  |
+| `~`      | Your home directory (`/home/shadows`)  |
 | `.`      | The current directory                |
 | `..`     | The parent directory (one level up)  |
 | `-`      | The previous directory you were in   |
@@ -187,32 +192,32 @@ Here's a typical navigation session:
 
 ```bash
 # Start — where am I?
-alice@ubuntu:~$ pwd
-/home/alice
+shadows@ubuntu:~$ pwd
+/home/shadows
 
 # Look around
-alice@ubuntu:~$ ls
+shadows@ubuntu:~$ ls
 Documents  Downloads  Music  Pictures  Desktop
 
 # Go into Documents
-alice@ubuntu:~$ cd Documents
-alice@ubuntu:~/Documents$ ls
+shadows@ubuntu:~$ cd Documents
+shadows@ubuntu:~/Documents$ ls
 notes.txt  projects/
 
 # Go into projects, then back up two levels at once
-alice@ubuntu:~/Documents$ cd projects
-alice@ubuntu:~/Documents/projects$ cd ../..
+shadows@ubuntu:~/Documents$ cd projects
+shadows@ubuntu:~/Documents/projects$ cd ../..
 
 # Now I'm back at home
-alice@ubuntu:~$ pwd
-/home/alice
+shadows@ubuntu:~$ pwd
+/home/shadows
 
 # Jump to a system directory and look around
-alice@ubuntu:~$ ls /etc
-hostname  hosts  passwd  shadow  fstab  nginx/  ...
+shadows@ubuntu:~$ ls /etc
+hostname  hosts  passwd  shadow  fstab  ...
 
 # Return home instantly
-alice@ubuntu:~$ cd ~
+shadows@ubuntu:~$ cd ~
 ```
 
 ---
@@ -224,6 +229,7 @@ Key commands
 ────────────────────────────────────────
   pwd          print current directory
   ls -la       list all files, long format
+  ls -lh human-readable sizes
   cd <dir>     move into a directory
   cd ~         go home
   cd ..        go up one level
@@ -231,10 +237,22 @@ Key commands
 
 Path types
 ────────────────────────────────────────
-  /home/alice  absolute (starts from /)
+  /home/shadows  absolute (starts from /)
   Documents    relative (from current dir)
   ~            shortcut for your home
   ..           shortcut for parent dir
+```
+
+---
+### Try it yourself
+
+```bash
+pwd
+ls
+cd /tmp
+pwd
+cd ~
+pwd
 ```
 
 ---
