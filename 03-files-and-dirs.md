@@ -1,6 +1,6 @@
 # 03 · Files & Directories
 
-> **Chapter 1 of 3 — The Shell & Filesystem**
+> **Chapter 1 of 3 — The Shell & Filesystem**  
 > `beginner` · ~12 min read
 
 ---
@@ -8,9 +8,13 @@
 ## What you'll learn
 
 - Create, copy, move, rename, and delete files and directories
+    
 - Read file contents in different ways
+    
 - Find files quickly with `find`
+    
 - Understand when to be careful (and why `rm` has no recycle bin)
+    
 
 ---
 
@@ -28,6 +32,12 @@ touch file1.txt file2.txt file3.txt
 
 > `touch` was originally designed to update a file's timestamp. Creating a new file is just a side effect — if the file doesn't exist yet, it gets created.
 
+Files whose names begin with a dot (`.`) are hidden by default.
+
+```bash
+touch .secret
+```
+
 ---
 
 ### `mkdir` — create a directory
@@ -42,6 +52,8 @@ mkdir -p projects/linux-lore/notes
 # Create several sibling directories
 mkdir chapter-01 chapter-02 chapter-03
 ```
+
+> **Remember:** `touch` creates files. `mkdir` creates directories.
 
 Without `-p`, this would fail if `projects` doesn't already exist:
 
@@ -97,7 +109,7 @@ mv notes.txt Documents/notes-2024.txt
 mv chapter-01/ archive/
 ```
 
-```
+```text
 Before:  ~/notes.txt
 After:   ~/Documents/notes-2024.txt
 
@@ -110,7 +122,7 @@ mv notes.txt Documents/notes-2024.txt
 
 ### `rm` — remove files and directories
 
-> **Warning:** `rm` is permanent. There is no recycle bin in the terminal. Once you run `rm`, the file is gone.
+> **Warning:** `rm` is permanent. There is usually no recycle bin in the terminal. Once you run `rm`, the file is gone.
 
 ```bash
 # Delete a single file
@@ -165,26 +177,30 @@ cat -n notes.txt
 cat file1.txt file2.txt
 ```
 
-`cat` is short for *concatenate* — its real purpose is to join files together. But printing a single file is what most people use it for day-to-day.
+`cat` is short for _concatenate_ — its real purpose is to join files together. But printing a single file is what most people use it for day-to-day.
 
 ---
 
 ### `less` — read long files comfortably
 
 ```bash
-less /var/log/syslog
+less ~/.bashrc
+```
+
+```bash
+less /etc/hosts
 ```
 
 `less` is an interactive file viewer. Useful when a file is too long to fit on screen.
 
-| Key        | Action                         |
-| ---------- | ------------------------------ |
-| `Space`    | Next page                      |
-| `b`        | Previous page                  |
-| `↑` `↓`   | Scroll one line at a time      |
-| `/word`    | Search for "word"              |
-| `n`        | Jump to next search match      |
-| `q`        | Quit                           |
+|Key|Action|
+|---|---|
+|`Space`|Next page|
+|`b`|Previous page|
+|`↑` `↓`|Scroll one line at a time|
+|`/word`|Search for "word"|
+|`n`|Jump to next search match|
+|`q`|Quit|
 
 ---
 
@@ -203,11 +219,15 @@ tail notes.txt
 # Last 50 lines
 tail -n 50 notes.txt
 
-# Watch a file live as it gets updated (great for logs)
-tail -f /var/log/syslog
+# Watch a file live as it gets updated
+tail -f example.log
 ```
 
-`tail -f` is one of the most useful commands when debugging — it streams new lines as they get added to a log file in real time.
+`tail -f` is one of the most useful commands when debugging — it streams new lines as they get added to a file in real time.
+
+Press `Ctrl + C` to stop following the file.
+
+> **Note:** Depending on your Linux distribution, log files may have different names and locations.
 
 ---
 
@@ -245,10 +265,10 @@ A symbolic link (symlink) is like a shortcut — a pointer to another file or di
 
 ```bash
 # Create a symlink
-ln -s /home/alice/projects/linux-lore ~/lore
+ln -s ~/projects/linux-lore ~/lore
 
 # Now ~/lore points to the full path
-cd ~/lore   # same as cd /home/alice/projects/linux-lore
+cd ~/lore
 ```
 
 You'll see symlinks a lot in `/usr/bin` — many commands are symlinks that point to the actual binary elsewhere.
@@ -259,35 +279,35 @@ You'll see symlinks a lot in `/usr/bin` — many commands are symlinks that poin
 
 ```bash
 # Start a new project from scratch
-alice@ubuntu:~$ mkdir -p projects/website/assets
-alice@ubuntu:~$ cd projects/website
+shadows@ubuntu:~$ mkdir -p projects/website/assets
+shadows@ubuntu:~$ cd projects/website
 
 # Create some files
-alice@ubuntu:~/projects/website$ touch index.html style.css
-alice@ubuntu:~/projects/website$ ls
+shadows@ubuntu:~/projects/website$ touch index.html style.css
+shadows@ubuntu:~/projects/website$ ls
 assets/  index.html  style.css
 
 # Put a copy of style.css in assets too
-alice@ubuntu:~/projects/website$ cp style.css assets/style-backup.css
+shadows@ubuntu:~/projects/website$ cp style.css assets/style-backup.css
 
 # Rename index.html
-alice@ubuntu:~/projects/website$ mv index.html home.html
+shadows@ubuntu:~/projects/website$ mv index.html home.html
 
 # Check what we have
-alice@ubuntu:~/projects/website$ ls -la
+shadows@ubuntu:~/projects/website$ ls -la
 total 16
-drwxr-xr-x 3 alice alice 4096 Jun  1 10:01 .
-drwxr-xr-x 3 alice alice 4096 Jun  1 10:00 ..
-drwxr-xr-x 2 alice alice 4096 Jun  1 10:01 assets
--rw-r--r-- 1 alice alice    0 Jun  1 10:00 home.html
--rw-r--r-- 1 alice alice    0 Jun  1 10:00 style.css
+drwxr-xr-x 3 shadows shadows 4096 Jun  1 10:01 .
+drwxr-xr-x 3 shadows shadows 4096 Jun  1 10:00 ..
+drwxr-xr-x 2 shadows shadows 4096 Jun  1 10:01 assets
+-rw-r--r-- 1 shadows shadows    0 Jun  1 10:00 home.html
+-rw-r--r-- 1 shadows shadows    0 Jun  1 10:00 style.css
 ```
 
 ---
 
 ## Summary
 
-```
+```text
 Creating
 ────────────────────────────────────────
   touch file.txt        create empty file
@@ -317,14 +337,15 @@ Finding
 ────────────────────────────────────────
   find . -name "*.txt"  search by name
   find ~ -mtime -7      modified in last 7 days
+  find ~ -size +100M    larger than 100 MB
 ```
 
 ---
 
-## Chapter 1 complete
+## Chapter 1 Complete — The Shell & Filesystem
 
-You can now navigate the filesystem, read and create files, and move things around. That's the foundation. Chapter 2 goes deeper — who *owns* those files, and who's allowed to touch them.
+You can now navigate the filesystem, read and create files, and move things around. That's the foundation. Chapter 2 goes deeper — who owns those files, and who is allowed to access or modify them.
 
-➡️ [Chapter 2 → 04 · Permissions](../chapter-02/04-permissions.md)
+➡️ [Chapter 2 → 04 · Permissions](04-permissions.md)
 
-⬅️ [02 · The Filesystem](./02-filesystem.md)
+⬅️ [02 · The Filesystem](02-filesystem.md)
