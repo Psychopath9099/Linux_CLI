@@ -31,9 +31,9 @@ Without permissions, any user could read your private files, overwrite system pr
 Run `ls -l` on any directory:
 
 ```
--rwxr-xr--  1  alice  dev  2048  Jun 1 10:00  deploy.sh
-drwxr-xr-x  2  alice  dev  4096  Jun 1 09:00  scripts/
-lrwxrwxrwx  1  alice  dev    14  Jun 1 08:00  latest -> scripts/v2
+-rwxr-xr--  1  shadows  dev  2048  Jun 1 10:00  deploy.sh
+drwxr-xr-x  2  shadows  dev  4096  Jun 1 09:00  scripts/
+lrwxrwxrwx  1  shadows  dev    14  Jun 1 08:00  latest -> scripts/v2
 ```
 
 The first column is the permission string. Let's decode it:
@@ -45,22 +45,34 @@ The first column is the permission string. Let's decode it:
 │  │     │     │
 │  │     │     └── others  (everyone else)
 │  │     └──────── group   (the "dev" group)
-│  └────────────── owner   (alice)
+│  └────────────── owner   (shadows)
 │
 └── file type:  - = regular file
                 d = directory
                 l = symbolic link
 ```
 
+> [!note] 
+ > Symbolic link permissions are generally ignored on Linux. Access is controlled by the permissions of the file or directory the link points to.
+
 Each group of three characters means the same thing:
 
-| Character | Meaning for files          | Meaning for directories            |
-| --------- | -------------------------- | ---------------------------------- |
-| `r`       | Can read the file          | Can list the directory contents    |
-| `w`       | Can write/modify the file  | Can create or delete files inside  |
+| Character | Meaning for files          | Meaning for directories             |
+| --------- | -------------------------- | ----------------------------------- |
+| `r`       | Can read the file          | Can list the directory contents     |
+| `w`       | Can write/modify the file  | Can create or delete files inside   |
 | `x`       | Can execute (run) the file | Can enter (`cd` into) the directory |
-| `-`       | Permission denied          | Permission denied                  |
-
+| `-`       | Permission denied          | Permission denied                   |
+> [!note]
+> **Important:** Directory permissions work differently from file permissions.
+>
+> For directories:
+>
+> - `r` = list the contents (`ls`)
+> - `w` = create, delete, or rename files inside
+> - `x` = enter the directory (`cd`)
+>
+> A directory usually needs both `r` and `x` to be useful.
 ---
 
 ## Worked example
@@ -80,7 +92,7 @@ Break it into four parts:
 └──────────────────────  type:  regular file
 ```
 
-So `alice` can read, write, and run this file. Anyone in the `dev` group can read and run it, but not modify it. Everyone else can only read it.
+So `shadows` can read, write, and run this file. Anyone in the `dev` group can read and run it, but not modify it. Everyone else can only read it.
 
 ---
 
@@ -160,15 +172,24 @@ chmod 755 script.sh
 # Result: rwxr-xr-x
 ```
 
+> [!note]
+> Applying `755` recursively is often not ideal because it gives execute permission to every file.
+>
+> In practice, directories and files are often assigned different permissions.
+
 **The most common values:**
 
-| Octal | String     | Typical use                              |
-| ----- | ---------- | ---------------------------------------- |
-| `755` | `rwxr-xr-x`| Scripts, programs — owner edits, all run |
-| `644` | `rw-r--r--`| Regular files — owner edits, all read   |
-| `600` | `rw-------`| Private files — SSH keys, secrets        |
-| `700` | `rwx------`| Private scripts — only you can run them  |
-| `777` | `rwxrwxrwx`| Full access for everyone (avoid this)    |
+| Octal | String      | Typical use                              |
+| ----- | ----------- | ---------------------------------------- |
+| `755` | `rwxr-xr-x` | Scripts, programs — owner edits, all run |
+| `644` | `rw-r--r--` | Regular files — owner edits, all read    |
+| `600` | `rw-------` | Private files — SSH keys, secrets        |
+| `700` | `rwx------` | Private scripts — only you can run them  |
+| `777` | `rwxrwxrwx` | Full access for everyone (avoid this)    |
+> [!warning]
+> `777` gives everyone full control of a file or directory.
+>
+> It is usually a sign that permissions are being used incorrectly and should almost never be required.
 
 > **Quick test:** What is `chmod 764`?
 >
@@ -189,6 +210,13 @@ chmod -R 755 myproject/
 
 Use `-R` carefully — it changes permissions on every single file and subfolder.
 
+> [!warning]
+> Recursive permission changes are common but can be dangerous.
+>
+> `chmod -R 755` gives execute permission to every file inside the directory, even files that are not programs.
+>
+> In production systems, files and directories are often assigned different permissions.
+
 ---
 
 ## Checking permissions
@@ -204,6 +232,14 @@ ls -ld mydir/
 stat file.txt
 ```
 
+Example:
+
+```text
+Access: (0644/-rw-r--r--)
+```
+
+This shows both the octal (`644`) and symbolic (`rw-r--r--`) forms of the permissions.
+
 ---
 
 ## Real-world examples
@@ -214,6 +250,8 @@ chmod u+x downloaded-script.sh
 ./downloaded-script.sh
 
 # Lock down your SSH private key (required by SSH — it refuses to use a key that's too open)
+chmod 600 ~/.ssh/id_ed25519  
+# or  
 chmod 600 ~/.ssh/id_rsa
 
 # A web server needs to serve files — set read for all
@@ -221,10 +259,35 @@ chmod 644 /var/www/html/index.html
 
 # A deployment script — only you can modify, everyone can run
 chmod 755 deploy.sh
+
+# Make a script executable
+chmod +x script.sh
+
+# Run it  
+./script.sh
 ```
 
 ---
+## Quick practice
 
+Create a file and experiment with permissions:
+
+```bash
+touch test.sh
+
+chmod 644 test.sh
+ls -l test.sh
+
+chmod u+x test.sh
+ls -l test.sh
+
+chmod 755 test.sh
+ls -l test.sh
+```
+
+Observe how the permission string changes after each command.
+
+---
 ## Summary
 
 ```
@@ -235,13 +298,20 @@ Reading permissions
   │ │   └────── group
   │ └────────── owner
   └──────────── type (- file, d dir, l link)
+  
+────────────────────────────────────────  
 
-chmod symbolic
+ # Make a script executable
+ chmod +x script.sh
+
 ────────────────────────────────────────
-  chmod u+x file     add execute for owner
-  chmod g-w file     remove write for group
-  chmod o=r file     set others to read only
-  chmod a+r file     add read for everyone
+  chmod symbolic
+────────────────────────────────────────
+  chmod +x file     make executable
+  chmod u+x file    add execute for owner
+  chmod g-w file    remove write for group
+  chmod o=r file    set others to read only
+  chmod a+r file    add read for everyone
 
 chmod octal
 ────────────────────────────────────────
